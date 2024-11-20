@@ -97,3 +97,16 @@ mySoccerNetDownloader.downloadGames(files=["Labels-v2.json"], split=["train", "v
 ![image](https://github.com/user-attachments/assets/695ef939-f2d3-4ebe-9053-ad61f64c6f72)
 
 
+# III. Methodology
+
+### Video part
+
+
+
+### Audio part
+
+
+
+### Combining part
+
+
