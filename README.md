@@ -169,10 +169,21 @@ https://github.com/lucidrains/vit-pytorch/blob/main/images/vit.gif
 <br>
 <br>
 
-### Audio part
+## Audio part
 
 
+## Combining part
 
-### Combining part
 
+# IV. Evaluation & Analysis
+## Video part
+
+## Audio part
+
+## Combining part
+
+
+# V. Related Work
+
+# VI. Conclusion
 
