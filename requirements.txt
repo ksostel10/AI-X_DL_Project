@@ -1,0 +1,14 @@
+transformers
+torch
+torchaudio
+ffmpeg-python
+moviepy
+soundfile
+SoccerNet
+os
+opencv
+torchaudio
+torchvision
+ffmpeg
+json
+subprocess
