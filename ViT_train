@@ -3,7 +3,7 @@
 # non-highlight 파일을 highlight 파일 안에 넣어야 작동이 될겁니다,
 # 즉, highlight 폴더 안에 goal, penatly, shots off target, shots on target, non-highlight 다섯 개의 세부 폴더가 있어야 합니다.
 
-```python
+
 import os
 import cv2
 import torch
@@ -16,9 +16,9 @@ from google.colab import drive
 
 # Mount Google Drive
 drive.mount('/content/drive')
-```
 
-```python
+
+
 # Configurations
 class Config:
     model_name = "google/vit-base-patch16-224"
@@ -152,4 +152,4 @@ def train():
 
 if __name__ == "__main__":
     train()
-```
+
