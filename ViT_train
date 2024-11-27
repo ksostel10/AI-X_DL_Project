@@ -1,0 +1,153 @@
+# colab에서 사용하게끔 작성된 코드입니다.
+
+# non-highlight 파일을 highlight 파일 안에 넣어야 작동이 될겁니다,
+# 즉, highlight 폴더 안에 goal, penatly, shots off target, shots on target, non-highlight 다섯 개의 세부 폴더가 있어야 합니다.
+
+import os
+import cv2
+import torch
+from torch.utils.data import Dataset, DataLoader
+from torchvision import transforms
+from transformers import ViTForImageClassification
+from tqdm import tqdm
+from PIL import Image
+from google.colab import drive
+
+# Mount Google Drive
+drive.mount('/content/drive')
+
+
+
+# Configurations
+class Config:
+    model_name = "google/vit-base-patch16-224"
+    num_classes = 5  # Goal, Penalty, Shots off target, Shots on target, non-highlight
+    batch_size = 4
+    num_epochs = 5
+    learning_rate = 1e-4
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    data_dir = "/content/drive/MyDrive/aix-딥러닝/SoccerNet/preprocessing/highlight"  # Root folder for videos and highlights
+    save_model_path = "/content/drive/MyDrive/aix-딥러닝/vit_finetuned.pth"
+    frame_save_dir = "/content/frames"   # Directory to save extracted frames
+
+config = Config()
+
+# Ensure the frame save directory exists
+os.makedirs(config.frame_save_dir, exist_ok=True)
+
+# Function to extract frames from videos
+def extract_frames(video_path, output_dir, target_fps=5):
+    cap = cv2.VideoCapture(video_path)
+    fps = int(cap.get(cv2.CAP_PROP_FPS))  # Original FPS of the video
+    frame_interval = max(1, fps // target_fps)  # Interval to extract frames for target FPS
+
+    count = 0
+    frame_count = 0
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+        if count % frame_interval == 0:
+            frame_path = os.path.join(output_dir, f"{os.path.basename(video_path)}_frame{frame_count}.jpg")
+            frame = cv2.resize(frame, (224, 224))  # Resize frame to 224x224
+            cv2.imwrite(frame_path, frame)
+            frame_count += 1
+        count += 1
+
+    cap.release()
+
+# Preprocess the dataset to extract frames
+for class_name in os.listdir(config.data_dir):
+    class_dir = os.path.join(config.data_dir, class_name)
+    frame_output_dir = os.path.join(config.frame_save_dir, class_name)
+
+    # 이미 프레임 디렉토리가 존재하고, 프레임이 있으면 건너뜀
+    if os.path.exists(frame_output_dir) and len(os.listdir(frame_output_dir)) > 0:
+        print(f"Skipping frame extraction for class '{class_name}', frames already exist.")
+        continue
+
+    os.makedirs(frame_output_dir, exist_ok=True)
+    for video_file in os.listdir(class_dir):
+        video_path = os.path.join(class_dir, video_file)
+        extract_frames(video_path, frame_output_dir)
+
+
+# Custom Dataset
+class SoccerDataset(Dataset):
+    def __init__(self, root_dir, transform=None):
+        self.root_dir = root_dir
+        self.transform = transform
+        self.data = []
+        self.labels = []
+
+        # Folder names correspond to class labels
+        self.class_names = {"Goal": 0, "Penalty": 1, "Shots off target": 2, "Shots on target": 3, "non-highlight": 4}
+
+        for class_name, label in self.class_names.items():
+            class_dir = os.path.join(root_dir, class_name)
+            for image_file in os.listdir(class_dir):
+                self.data.append(os.path.join(class_dir, image_file))
+                self.labels.append(label)
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        image_path = self.data[idx]
+        label = self.labels[idx]
+        try:
+            image = Image.open(image_path).convert("RGB")
+        except Exception as e:
+            print(f"Error loading image {image_path}: {e}")
+            raise
+        if self.transform:
+            image = self.transform(image)
+        return image, label
+
+# Data Preparation
+transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+])
+
+dataset = SoccerDataset(root_dir=config.frame_save_dir, transform=transform)
+data_loader = DataLoader(dataset, batch_size=config.batch_size, shuffle=True)
+
+# Load Pretrained ViT
+model = ViTForImageClassification.from_pretrained(
+    config.model_name,
+    num_labels=config.num_classes,
+    ignore_mismatched_sizes=True  # To handle size mismatch
+)
+model.to(config.device)
+
+# Optimizer and Loss
+optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
+criterion = torch.nn.CrossEntropyLoss()
+
+# Training Loop
+def train():
+    model.train()
+    for epoch in range(config.num_epochs):
+        total_loss = 0
+        for images, labels in tqdm(data_loader, desc=f"Epoch {epoch+1}/{config.num_epochs}"):
+            images, labels = images.to(config.device), labels.to(config.device)
+
+            optimizer.zero_grad()
+            outputs = model(images).logits
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+
+            total_loss += loss.item()
+
+        print(f"Epoch {epoch+1}/{config.num_epochs}, Loss: {total_loss/len(data_loader)}")
+
+    # Save the model
+    torch.save(model.state_dict(), config.save_model_path)
+    print(f"Model saved to {config.save_model_path}")
+
+if __name__ == "__main__":
+    train()
