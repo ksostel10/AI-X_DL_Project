@@ -134,7 +134,7 @@ CNN의 구조는 아래와 같습니다.
 CNN의 중요한 기능 요소중 하나인 Subsampling layer에 대해서 알아보겠습니다.
 <br>
 Subsampling layer는 입력 데이터의 크기를 줄이는 역할을 합니다. 이는 데이터의 변화와 왜곡(위치이동, 회전, 부분적인 변화 등)에 강인한 인식 능력을 키워줍니다. 
-<br>
+
 데이터의 변형과 왜곡은 경우의 수가 셀 수 없을 정도로 많기 때문에, 이를 모두 준비하여 학습하는 것은 비효율적입니다. 이를 쉽게 해결하기 위해 subsampling을 활용합니다. subsampling을 통해 입력 데이터의 크기를 줄이면 비교적 강인한 특징만 남고, 자잘한 변화들은 사라지는 효과를 얻을 수 있습니다.
 
 ![image](https://github.com/user-attachments/assets/2d74f306-b90c-4333-b5fb-115043abe48c)
@@ -145,7 +145,7 @@ Subsampling layer는 입력 데이터의 크기를 줄이는 역할을 합니다
 ## Gated Recurrent Unit(GRU)
 
 GRU는 RNN 기반 모델로, LSTM의 장기 의존성 문제에 대한 해결책을 유지하면서 은닉 상태를 업데이트하는 계산을 줄였습니다. 즉, LSTM과 비교했을 때 성능은 비슷하면서 구조를 간단화시켜 빠른 학습 속도를 가능하게 한 모델이라고 할 수 있습니다.
-<br>
+
 전체적인 GRU의 구조는 아래와 같습니다.
 
 ![image](https://github.com/user-attachments/assets/2155aef2-15a3-4599-86e2-90cb69d31f8e)
@@ -186,6 +186,22 @@ update gate 결과와 candidate 결과를 결합하여 현 시점의 은닉층�
 
 ![image](https://github.com/user-attachments/assets/7583558b-7ad0-4d54-9379-3bf55acf84f0)
 
+<br>
+<br>
+
+## Residual Network(ResNet)
+
+ResNet은 Microsoft Research에서 2015년 발표한 딥러닝 모델로, 기존 CNN 모델에서 발생하는 기울기 소실(Vanishing Gradient) 문제를 해결하기 위해 제안되었습니다. 
+
+ResNet의 핵심적인 아이디어는 Residual Connection(잔차연결)으로, 딥러닝에서 학습해야할 함수 H(x) 대신, 잔차(Residual)인 F(x)=H(x)−x를 학습하는 것입니다. 이 구조는 입력 x를 출력에 그대로 더하는 Skip Connection 구조로 구현됩니다.
+
+이 구조를 그림으로 표현하면 아래와 같습니다.
+
+![image](https://github.com/user-attachments/assets/2268e499-c8ab-45e0-b11b-59c1086b89e9)
+
+Conv층을 통과한 F(X)와 Conv층을 통과하지 않은 x를 더하는 과정을 Residual Mapping 이라고 합니다. 위 Residual Block이 여러 개 쌓여서 나온 CNN 모델이 ResNet입니다.
+
+모델명에 붙은 숫자는 층의 개수를 의미합니다. 우리가 이번 프로젝트에서 사용하는 모델은 ResNet-50으로, 50개의 층이 있다는 것을 의미합니다.
 
 
 # IV. Evaluation & Analysis
