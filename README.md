@@ -99,7 +99,7 @@ mySoccerNetDownloader.downloadGames(files=["Labels-v2.json"], split=["train", "v
 
 # III. Methodology
 
-## Convolutional Neural Network
+## Convolutional Neural Network(CNN)
 CNN은 주로 공간적 데이터를 처리하기 위해 설계된 딥러닝 모델입니다. CNN은 Convolution(합성곱) 연산과 Pooling(서브샘플링)을 기반으로 데이터를 처리하며, 데이터의 공간적 구조를 효과적으로 학습합니다.
 
 <br>
@@ -108,17 +108,23 @@ CNN의 구조는 아래와 같습니다.
 
 <br>
 
-1. 합성곱 계층(Convolutional Layer)
+1. 합성곱 계층(Convolutional Layer) <br>
 이미지를 작은 패치로 분할하고, 각 패치에 가중치 행렬(필터)을 적용하여 특징을 추출합니다. 여러개의 필터를 사용하여 특징 추출 과정을 반복하여, 추출된 특징들은 특징맵(Feature Map)이라는 새로운 이미지 형태로 변환됩니다.
 
 ![image](https://github.com/user-attachments/assets/69b41e90-1712-45d1-be82-9bca62a58f2c)
 
-2. 풀링 계층(Pooling Layer)
+<br>
+<br>
+
+2. 풀링 계층(Pooling Layer) <br>
 특징맵의 크기를 줄여 계산량을 줄이고, 특징 정보의 중요성을 강조하는 역할을 합니다. 일반적으로 Max Pooling과 Average Pooling 두 가지 방식이 사용됩니다. 풀링 계층을 거치며 특징맵의 크기가 줄어들지만, 중요한 특징 정보는 유지됩니다.
 
 ![image](https://github.com/user-attachments/assets/49ee9e09-05cd-4630-ae71-f6a83da0034a)
 
-3. 완전 연결 계층(Fully Connected Layer)
+<br>
+<br>
+
+3. 완전 연결 계층(Fully Connected Layer) <br>
 이전 단계에서 추출된 특징맵을 벡터 형태로 변환하고, MLP를 사용하여 객체를 탐지하는 최종 출력을 생성합니다.
 
 ![image](https://github.com/user-attachments/assets/bcccdf70-ca9c-49a2-9d63-90c43df85ffb)
@@ -136,12 +142,49 @@ Subsampling layer는 입력 데이터의 크기를 줄이는 역할을 합니다
 <br>
 <br>
 
-## (Sequence to Vector) GRU
+## Gated Recurrent Unit(GRU)
+
+GRU는 RNN 기반 모델로, LSTM의 장기 의존성 문제에 대한 해결책을 유지하면서 은닉 상태를 업데이트하는 계산을 줄였습니다. 즉, LSTM과 비교했을 때 성능은 비슷하면서 구조를 간단화시켜 빠른 학습 속도를 가능하게 한 모델이라고 할 수 있습니다.
+<br>
+전체적인 GRU의 구조는 아래와 같습니다.
+
+![image](https://github.com/user-attachments/assets/2155aef2-15a3-4599-86e2-90cb69d31f8e)
+![image](https://github.com/user-attachments/assets/0b165e72-9e04-4797-9f97-138f9903405e)
 
 
+<br>
+<br>
 
+각 단계를 순차적으로 알아보겠습니다.
+<br>
+1. Reset Gate <br>
+과거의 정보를 적당히 리셋시키는게 목적으로 sigmoid 함수를 출력으로 이용해 (0, 1) 값을 이전 은닉층에 곱해줍니다.
 
+![image](https://github.com/user-attachments/assets/dc11f22f-07f6-41fc-bdd5-9b1c7a1bbc2e)
 
+<br>
+<br>
+
+2. Update Gate <br>
+과거와 현재 정보의 최신화 비율을 결정합니다. sigmoid로 출력된 결과는 현시점의 정보의 양을 결정하고, (1-sigmoid) 값은 직전 시점의 은닉층의 정보에 곱해줍니다. 
+
+![image](https://github.com/user-attachments/assets/3df0920c-b8b4-4428-8701-5de600d65982)
+
+<br>
+<br>
+
+3. Candidate <br>
+현 시점의 정보 후보군을 계산하는 단계입니다. 과거 은닉층의 정보를 그대로 이용하지 않고 리셋 게이트의 결과를 곱하여 이용해줍니다.
+
+![image](https://github.com/user-attachments/assets/ea8d2978-b100-4931-a305-96f14f976b89)
+
+<br>
+<br>
+
+4. 은닉층 계산 <br>
+update gate 결과와 candidate 결과를 결합하여 현 시점의 은닉층을 계산하는 단계입니다. 앞에서 이야기했듯이 sigmoid 함수의 결과는 현시점의 정보 양을 결정하고, (1-sigmoid) 함수의 결과는 과거 시점의 정보 양을 결정합니다.
+
+![image](https://github.com/user-attachments/assets/7583558b-7ad0-4d54-9379-3bf55acf84f0)
 
 
 
@@ -170,7 +213,7 @@ Subsampling layer는 입력 데이터의 크기를 줄이는 역할을 합니다
 <br>
 <br>
 
-위의 과정을 좀 더 상세히 기술하겠습니다. 먼저 이미지를 고정된 크기의 patch로 나누어야 합니다. 이 말은 기존의 (C, H, W) 크기의 이미지를 크기가 (P, P)인 patch N개로 자른다는 뜻입니다. 예를들어, C = 3, H = 32, W = 32 인 이미지가 있다면 이를 2X2 = 4개 patch의 3X16X16 이미지로 바꿀 수 있습니다. 즉, 4X(3X16X16) 형태가 되고, 이를 flatten 하게 1X768 크기의 vector로 변형하여 최종적으로 4X768의 matrix가 생성됩니다.
+위의 과정을 좀 더 상세히 기술하겠습니다. 먼저 이미지를 고정된 크기의 patch로 나누어야 합니다. 이 말은 기존의 (C, H, W) 크기의 이미지를 크기가 (P, P)인 patch N개로 자른다는 뜻입니다. 예를들어, C = 3, H = 32, W = 32 인 이미지가 있다면 이를 2X2 = 4개 patch의 16X16 이미지로 바꿀 수 있습니다. 즉, 4X(3X16X16) 형태가 되고, 이를 flatten 하게 1X768 크기의 vector로 변형하여 최종적으로 4X768의 matrix가 생성됩니다.
 
 ![image](https://github.com/user-attachments/assets/05b1c7af-b211-4053-a713-10bde8816253)
 
