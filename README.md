@@ -100,6 +100,23 @@ mySoccerNetDownloader.downloadGames(files=["Labels-v2.json"], split=["train", "v
 # III. Methodology
 
 ## Video part
+
+
+## Audio part
+
+
+## Combining part
+
+
+# IV. Evaluation & Analysis
+## Video part
+
+## Audio part
+
+## Combining part
+
+
+# V. Related Work
 ### ViT(Vision Transformer)
 자연어 처리(NLP)에서 각광받는 Transformer 구조를 Language가 아닌 Computer Vision 영역에 적용한 모델입니다.
 
@@ -168,22 +185,6 @@ https://github.com/lucidrains/vit-pytorch/blob/main/images/vit.gif
 
 <br>
 <br>
-
-## Audio part
-
-
-## Combining part
-
-
-# IV. Evaluation & Analysis
-## Video part
-
-## Audio part
-
-## Combining part
-
-
-# V. Related Work
 
 # VI. Conclusion
 
