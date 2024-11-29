@@ -40,7 +40,7 @@ Task :
 
 ### Goal
 
-우리의 목표는 >>   &nbsp;&nbsp;&nbsp;   << 입니다. 이 목표를 위해서 진행되는 과정은 다음과 같습니다. 우리는 처음에 audio 부분과 video 부분을 따로 처리합니다. 먼저 축구 경기 동영상에서 audio와 video를 분리하여 추출합니다. 이때, video는 초당 5프레임으로 설정하여 추출합니다. 이후 audio의 경우에는 Subsampling layer CNN 모델을 이용하여 maxPooling 방식으로 길이를 줄이며 각 하이라이트의 중요한 특징을 추출하고, (Sequence to Vector)GRU 모델을 사용하여 시퀀스 데이터를 고정 길이 벡터로 변환합니다. video의 경우에는 resNet 모델을 이용하여 각 하이라이트의 중요한 특징을 추출하고, (Sequence to Vector)GRU 모델을 사용하여 시퀀스 데이터를 고정 길이 벡터로 변환합니다. 마지막으로 audio 부분과 video 부분에서 얻은 데이터를 결합하여 하나의 Tensor를 생성하고, 이를 Fully Connected Layer 모델을 이용하여 최종적으로 highlight or non-highlight 이진 분를 수행합니다. 
+우리의 목표는 >>   &nbsp;&nbsp;&nbsp;   << 입니다. 이 목표를 위해서 진행되는 과정은 다음과 같습니다. 우리는 처음에 audio 부분과 video 부분을 따로 처리합니다. 먼저 축구 경기 동영상에서 audio와 video를 분리하여 추출합니다. 이때, video는 초당 5프레임으로 설정하여 추출합니다. 이후 audio의 경우에는 (Subsampling layer) CNN 모델을 이용하여 maxPooling 방식으로 길이를 줄이며 각 하이라이트의 중요한 특징을 추출하고, (Sequence to Vector)GRU 모델을 사용하여 시퀀스 데이터를 고정 길이 벡터로 변환합니다. video의 경우에는 resNet 모델을 이용하여 각 하이라이트의 중요한 특징을 추출하고, (Sequence to Vector)GRU 모델을 사용하여 시퀀스 데이터를 고정 길이 벡터로 변환합니다. 마지막으로 audio 부분과 video 부분에서 얻은 데이터를 결합하여 하나의 Tensor를 생성하고, 이를 Fully Connected Layer 모델을 이용하여 최종적으로 highlight or non-highlight 이진 분류를 수행합니다. 
 
 # II. Datasets
 
@@ -99,13 +99,50 @@ mySoccerNetDownloader.downloadGames(files=["Labels-v2.json"], split=["train", "v
 
 # III. Methodology
 
-## Video part
+## Convolutional Neural Network
+CNN은 주로 공간적 데이터를 처리하기 위해 설계된 딥러닝 모델입니다. CNN은 Convolution(합성곱) 연산과 Pooling(서브샘플링)을 기반으로 데이터를 처리하며, 데이터의 공간적 구조를 효과적으로 학습합니다.
+
+<br>
+
+CNN의 구조는 아래와 같습니다.
+
+<br>
+
+1. 합성곱 계층(Convolutional Layer)
+이미지를 작은 패치로 분할하고, 각 패치에 가중치 행렬(필터)을 적용하여 특징을 추출합니다. 여러개의 필터를 사용하여 특징 추출 과정을 반복하여, 추출된 특징들은 특징맵(Feature Map)이라는 새로운 이미지 형태로 변환됩니다.
+
+![image](https://github.com/user-attachments/assets/69b41e90-1712-45d1-be82-9bca62a58f2c)
+
+2. 풀링 계층(Pooling Layer)
+특징맵의 크기를 줄여 계산량을 줄이고, 특징 정보의 중요성을 강조하는 역할을 합니다. 일반적으로 Max Pooling과 Average Pooling 두 가지 방식이 사용됩니다. 풀링 계층을 거치며 특징맵의 크기가 줄어들지만, 중요한 특징 정보는 유지됩니다.
+
+![image](https://github.com/user-attachments/assets/49ee9e09-05cd-4630-ae71-f6a83da0034a)
+
+3. 완전 연결 계층(Fully Connected Layer)
+이전 단계에서 추출된 특징맵을 벡터 형태로 변환하고, MLP를 사용하여 객체를 탐지하는 최종 출력을 생성합니다.
+
+![image](https://github.com/user-attachments/assets/bcccdf70-ca9c-49a2-9d63-90c43df85ffb)
+
+<br>
+
+CNN의 중요한 기능 요소중 하나인 Subsampling layer에 대해서 알아보겠습니다.
+<br>
+Subsampling layer는 입력 데이터의 크기를 줄이는 역할을 합니다. 이는 데이터의 변화와 왜곡(위치이동, 회전, 부분적인 변화 등)에 강인한 인식 능력을 키워줍니다. 
+<br>
+데이터의 변형과 왜곡은 경우의 수가 셀 수 없을 정도로 많기 때문에, 이를 모두 준비하여 학습하는 것은 비효율적입니다. 이를 쉽게 해결하기 위해 subsampling을 활용합니다. subsampling을 통해 입력 데이터의 크기를 줄이면 비교적 강인한 특징만 남고, 자잘한 변화들은 사라지는 효과를 얻을 수 있습니다.
+
+![image](https://github.com/user-attachments/assets/2d74f306-b90c-4333-b5fb-115043abe48c)
+
+<br>
+<br>
+
+## (Sequence to Vector) GRU
 
 
-## Audio part
 
 
-## Combining part
+
+
 
 
 # IV. Evaluation & Analysis
