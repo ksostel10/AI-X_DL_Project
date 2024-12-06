@@ -1,7 +1,7 @@
 import os
 import torch
 from torchvision import transforms
-from transformers import ViTForImageClassification
+from torchvision.models import resnet50, ResNet50_Weights
 
 
 class ConvStridePoolSubsampling(torch.nn.Module):
@@ -36,7 +36,6 @@ class ConvStridePoolSubsampling(torch.nn.Module):
         x = self.conv_block(x)
         batch_size, channels, features, time = x.size()
         x = x.view(batch_size, time, -1)
-        print(x.shape)
         return x
 
 class Seq2VecGRU_Audio(torch.nn.Module):
@@ -73,7 +72,7 @@ class Seq2VecGRU_Audio(torch.nn.Module):
         return output
     
 class Seq2VecGRU_Video(torch.nn.Module):
-    def __init__(self, input_size=768, hidden_size=768, output_size=768, num_layers=1, bidirectional=True):
+    def __init__(self, input_size=1000, hidden_size=512, output_size=512, num_layers=1, bidirectional=True):
         super(Seq2VecGRU_Video, self).__init__()
         
         # GRU 계층
@@ -103,17 +102,52 @@ class Seq2VecGRU_Video(torch.nn.Module):
         # Fully Connected Layer 통과
         output = self.fc(hidden)  # (batch_size, output_size)
 
-        print(output.shape)
         return output
 
     
 class HighlightsClassifier(torch.nn.Module):
     def __init__(self):
         super(HighlightsClassifier, self).__init__()
-        self.ViT = ViTForImageClassification.from_pretrained("google/vit-base-patch16-224")
-        self.conv_stride_pool = ConvStridePoolSubsampling()
-        self.fc = torch.nn.Linear(1000, 768)
-    
-    def forward(self, x):
-        x1 = self.conv_stride_pool(x)
-        x2 = self.ViT(x)
+        self.ConvStridePoolSubsampling = ConvStridePoolSubsampling()
+        self.Seq2VecGRU_Video = Seq2VecGRU_Video()
+        self.Seq2VecGRU_Audio = Seq2VecGRU_Audio()
+        self.resnet = resnet50(weights=ResNet50_Weights.DEFAULT)
+        self.fc1 = torch.nn.Linear(768, 768)
+        self.fc2 = torch.nn.Linear(768, 2)
+        self.audio_norm = torch.nn.LayerNorm(256)
+        self.video_norm = torch.nn.LayerNorm(512)
+        self.relu = torch.nn.ReLU()
+        self.dropout_audio = torch.nn.Dropout(p=0.2)  # 오디오 경로 dropout
+        self.dropout_video = torch.nn.Dropout(p=0.2)  # 비디오 경로 dropout
+        self.dropout_fc = torch.nn.Dropout(p=0.3)     # Fully Connected Layer dropout
+        self.softmax = torch.nn.Softmax(dim=1)
+
+    def forward(self, x1, x2):
+        # 오디오 경로 처리
+        x1 = self.ConvStridePoolSubsampling(x1)
+        x1 = self.Seq2VecGRU_Audio(x1)
+        x1 = self.audio_norm(x1)  # LayerNorm 적용
+        x1 = self.relu(x1)        # ReLU 적용
+        x1 = self.dropout_audio(x1)  # Dropout 적용
+
+        # 비디오 경로 처리
+        num_frames, channels, height, width = x2.shape
+        batch_size = num_frames // 75
+        x2 = self.resnet(x2)
+        x2 = x2.view(batch_size, num_frames // batch_size, -1)  # Reshape for GRU: (batch_size, num_frames, feature_size)
+        x2 = self.Seq2VecGRU_Video(x2)
+        x2 = self.video_norm(x2)  # LayerNorm 적용
+        x2 = self.relu(x2)        # ReLU 적용
+        x2 = self.dropout_video(x2)  # Dropout 적용
+
+        # 두 경로 결합
+        x3 = torch.cat((x1, x2), dim=1)
+
+        # Fully Connected Layers
+        x3 = self.fc1(x3)
+        x3 = self.relu(x3)  # ReLU
+        x3 = self.dropout_fc(x3)  # Dropout 적용
+        x3 = self.fc2(x3)
+        x3 = self.softmax(x3)  # Softmax
+
+        return x3

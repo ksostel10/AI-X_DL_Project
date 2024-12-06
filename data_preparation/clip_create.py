@@ -9,19 +9,26 @@ def ffmpeg_extract_subclip_accurate(input_path, start_time, end_time, output_pat
     """
     command = [
         "ffmpeg",
-        "-y",  # 출력 파일 덮어쓰기
+        "-y",  # 기존 파일 덮어쓰기
         "-i", input_path,  # 입력 파일
         "-ss", str(start_time),  # 시작 시간
         "-to", str(end_time),  # 종료 시간
-        "-c", "copy",  # 코덱 복사 (빠른 처리)
-        "-avoid_negative_ts", "1",  # 타임스탬프 조정
+        "-c:v", "libx264",  # 비디오 코덱: H.264 (효율적이고 호환성 높음)
+        "-preset", "fast",  # 인코딩 속도와 품질의 균형 (fast 추천)
+        "-crf", "23",  # 비디오 품질 설정 (낮을수록 고품질, 23은 적절한 기본값)
+        "-c:a", "aac",  # 오디오 코덱: AAC (효율적이고 품질 유지)
+        "-b:a", "128k",  # 오디오 비트레이트 (128 kbps는 일반적인 설정)
+        "-strict", "experimental",  # AAC 관련 호환성
         output_path
     ]
     subprocess.run(command, check=True)
 
 def create_save(root_dir):
+    processed_clips = set()
+
     # 각 경기 폴더를 순회
     for match_folder in os.listdir(root_dir):
+        cnt = 0
         match_path = os.path.join(root_dir, match_folder)
         if os.path.isdir(match_path):
             # JSON 파일 경로 설정
@@ -43,22 +50,38 @@ def create_save(root_dir):
 
                     start_time = event_time - 10
                     end_time = event_time + 5
+                    clip_key = (first_second_time, start_time, end_time)
+
+                    if clip_key not in processed_clips:
+                        processed_clips.add(clip_key)  # 중복 방지
+
+                        if entry["label"] in ["Goal", "Penalty", "Shots off target", "Shots on target"]:
+                            label_dir = r"C:\Users\ksost\soccer_env\cliped_data\video\highlights"
+                            clip_name = f"highlights_{len(os.listdir(label_dir)) + 1}.mkv"
+                            output_path = os.path.join(label_dir, clip_name)
+
+                            if not os.path.exists(output_path):  # 중복 파일 방지
+                                if first_second_time == "1":
+                                    ffmpeg_extract_subclip_accurate(video1_path, start_time, end_time, output_path)
+                                else:
+                                    ffmpeg_extract_subclip_accurate(video2_path, start_time, end_time, output_path)
+
+                        else:
+                            cnt += 1
+                            if cnt == 8:
+                                label_dir = r"C:\Users\ksost\soccer_env\cliped_data\video\non-highlights"
+                                clip_name = f"non-highlight_{len(os.listdir(label_dir)) + 1}.mkv"
+                                output_path = os.path.join(label_dir, clip_name)
+
+                                if not os.path.exists(output_path):  # 중복 파일 방지
+                                    cnt = 0
+                                    if first_second_time == "1":
+                                        ffmpeg_extract_subclip_accurate(video1_path, start_time, end_time, output_path)
+                                    else:
+                                        ffmpeg_extract_subclip_accurate(video2_path, start_time, end_time, output_path)
+                                else:
+                                    cnt -= 1
+
                     
-                    if entry["label"] == "Goal" or entry["label"] == "Penalty" or entry["label"] == "Shots off target" or entry["label"] == "Shots on target":
-                        label_dir = f"C:\\Users\\ksost\\soccer_env\\cliped_data\\video\\highlights"
-                        clip_name = f"highlights_{len(os.listdir(label_dir)) + 1}.mkv"
-                        output_path = os.path.join(label_dir, clip_name)
-
-                        if first_second_time == "1":
-                            ffmpeg_extract_subclip_accurate(video1_path, start_time, end_time, output_path)
-                        else:
-                            ffmpeg_extract_subclip_accurate(video2_path, start_time, end_time, output_path)
-                    else:
-                        label_dir = r"C:\Users\ksost\soccer_env\cliped_data\video\non-highlights"
-                        clip_name = f"non-highlight_{len(os.listdir(label_dir)) + 1}.mkv"
-                        output_path = os.path.join(label_dir, clip_name)
-
-                        if first_second_time == "1":
-                            ffmpeg_extract_subclip_accurate(video1_path, start_time, end_time, output_path)
-                        else:
-                            ffmpeg_extract_subclip_accurate(video2_path, start_time, end_time, output_path)
+root_dir = r"C:\Users\ksost\soccer_env\base_data\champs_and_epl"
+create_save(root_dir)

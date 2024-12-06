@@ -21,9 +21,7 @@ def extract_audio_from_video(extracted_video_path, base_audio_path):
             audio_path = os.path.join(base_audio_path, target, entry.split(".")[0] + ".wav")
             extract(video_path, audio_path)
 
-# root_dir = r"C:\Users\ksost\soccer_env\base_data\england_epl"
-# base_video_path = r"C:\Users\ksost\soccer_env\cliped_data\video"
-# base_audio_path = r"C:\Users\ksost\soccer_env\cliped_data\audio"
-# base_spectrogram_path = r"C:\Users\ksost\soccer_env\cliped_data\spectrogram"
-# extracted_video_path = r"C:\Users\ksost\soccer_env\cliped_data\video"
-# extract_audio_from_video(extracted_video_path, base_audio_path)
+
+base_audio_path = r"C:\Users\ksost\soccer_env\cliped_data\audio"
+extracted_video_path = r"C:\Users\ksost\soccer_env\cliped_data\video"
+extract_audio_from_video(extracted_video_path, base_audio_path)
