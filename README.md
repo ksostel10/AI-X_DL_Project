@@ -10,7 +10,7 @@ II. Datasets
 
 III. Methodology
 
-IV. Evaluation & Analysis
+IV. Model Architecture
 
 V. Related Work
 
@@ -26,7 +26,7 @@ Task :
 
 Task : 
 
-양형석 /  /
+양형석 / 전기공학부 / yhs30480@gmail.com
 
 Task : 
 
@@ -204,13 +204,46 @@ Conv층을 통과한 F(X)와 Conv층을 통과하지 않은 x를 더하는 과�
 모델명에 붙은 숫자는 층의 개수를 의미합니다. 우리가 이번 프로젝트에서 사용하는 모델은 ResNet-50으로, 50개의 층이 있다는 것을 의미합니다.
 
 
-# IV. Evaluation & Analysis
+# IV. Model Architecture
+![image](https://github.com/user-attachments/assets/991be364-ada3-4eb6-8846-46096e22517e)
+
+위의 그림은 저희가 만든 모델의 전체 구조입니다. Input tensor의 변화를 자세히 살펴보겠습니다.
 ## Video part
+그림에서 S는 Sequence, C는 Channel, H는 Height, W는 Width를 의미합니다.
+
+Raw video의 (S, C, H, W)는 (**25*15, 3, 224, 398**)입니다.
+
+저희는 영상 전처리 과정에서 Data Augmentation과 함께 Height와 Width를 (224, 224)로 Resizing 했습니다.
+<br>또한 25fps를 5fps로 압축시키면서 Sequence의 길이를 5*15로 줄였습니다.
+
+(**75, 3, 224, 224**)를 ResNet-50의 Input으로 사용했고, ImageNet-1K Pretrained Model을 사용한 만큼 output은 (**75, 1000**)이 됩니다.
+
+이를 Bidirectional GRU에 통과시켰습니다.
+<br>Hidden Size를 512로 사용하였고 Bidirectional이기 때문에 output은 (**512*2**)입니다.
+
+이를 바로 Linear Layer에 통과시켜 (**512**)로 만듭니다.
+<br>
+<br>
 
 ## Audio part
+Raw audio는 (Channel, Sequence, Amplitude)의 텐서입니다.
+
+Channel의 경우 Stereo이므로 2이지만 양쪽 소리의 평균을 내어 1로 만들었습니다.
+<br>그리고 Mel-Spectrogram 변환으로 STFT을 적용시켜 Sequence를 축소시키고 Amplitude를 Frequency 도메인으로 변환했습니다.
+<br>그래서 전처리 과정을 거친 오디오 텐서는 (Channel, Sequence, Frequency)인 (**1, 4500, 64**)가 됩니다.
+
+이를 stride가 2인 Convolution, MaxPooling Layer에 여러번 통과시켜 (Sequence/64, Feature), 즉 (**35, 2048**)을 output으로 갖습니다.
+
+Video에서와 마찬가지로 Bidirectional GRU와 Linear Layer를 통과시켜 결국 (**256**)이 나오게 됩니다.
+<br>
+<br>
 
 ## Combining part
-
+Video의 (**512**)와 Audio의 (**256**)를 Concatenate 하여 (**768**)을 얻습니다.
+<br>얻은 벡터를 (768, 768), (768, 1)의 Linear Layer에 통과 시키면 (**1**)의 logit 스칼라가 됩니다.
+<br>Logit이 Sigmoid function을 통과하고 결과적으로 저희가 원하는 Probability를 얻을 수 있게 됩니다.
+<br>
+<br>
 
 # V. Related Work
 ### ViT(Vision Transformer)
