@@ -49,13 +49,21 @@ Task : 전체적인 모델 구조 설계 / 모델 코드 작성 / 데이터 전�
  우리의 목표는 "축구 하이라이트 자동 추출 모델 만들기" 입니다. 이 목표를 위해서 진행되는 과정은 다음과 같습니다.
  
 <br>
-&nbsp; 가장 먼저 경기당 100분정도 되는 축구영상을 highlight와 non-highlight로 분류합니다. 이때 하이라이트의 기준은 Goal(골), Peanlty(반칙), Shots on target(유효슈팅), Shots off target(유효슈팅이 아닌 슈팅)으로 지정하여 사건이 발생한 순간의 앞 10초, 뒤 5초를 포함하여 총 15초의 영샹을 하이라이트로 분류합니다. 그 외 나머지 부분은 non-highlight로 분류합니다. <br>
-&nbsp; 이후 audio 부분과 video 부분을 나누어서 모델을 학습합니다. audio의 경우에는 (Subsampling layer) CNN 모델을 이용하여 maxPooling 방식으로 길이를 줄이며 각 하이라이트의 중요한 특징을 추출하고, (Sequence to Vector)GRU 모델을 사용하여 시퀀스 데이터를 고정 길이 벡터로 변환합니다. video의 경우에는 초당 5프레임의 사진으로 변환 후에 resNet 모델을 이용하여 각 하이라이트의 중요한 특징을 추출하고, (Sequence to Vector)GRU 모델을 사용하여 시퀀스 데이터를 고정 길이 벡터로 변환합니다. 즉, 우리는 audio와 video로 나누어 각각의 모델을 Goal, Penatly, Shots on target, Shots off target, non-highlight 5개의 target data를 기준으로 학습시킵니다.<br>
-&nbsp; 마지막으로 audio 부분과 video 부분에서 얻은 데이터를 결합하여 하나의 Tensor를 생성하고, 이를 Fully Connected Layer 모델을 이용하여 최종적으로 highlight or non-highlight 이진 분류를 수행합니다. 
+가장 먼저 경기당 100분정도 되는 축구영상을 highlight와 non-highlight로 분류합니다. 이때 하이라이트의 기준은 Goal(골), Peanlty(반칙), Shots on target(유효슈팅), Shots off target(유효슈팅이 아닌 슈팅)으로 지정하여 사건이 발생한 순간의 앞 10초, 뒤 5초를 포함하여 총 15초의 영샹을 하이라이트로 분류합니다. 그 외 나머지 부분은 non-highlight로 분류합니다.
+
+<br>
+<br>
+
+이후 audio 부분과 video 부분을 나누어서 모델을 학습합니다. audio의 경우에는 (Subsampling layer) CNN 모델을 이용하여 maxPooling 방식으로 길이를 줄이며 각 하이라이트의 중요한 특징을 추출하고, (Sequence to Vector)GRU 모델을 사용하여 시퀀스 데이터를 고정 길이 벡터로 변환합니다. video의 경우에는 초당 5프레임의 사진으로 변환 후에 resNet 모델을 이용하여 각 하이라이트의 중요한 특징을 추출하고, (Sequence to Vector)GRU 모델을 사용하여 시퀀스 데이터를 고정 길이 벡터로 변환합니다. 즉, 우리는 audio와 video로 나누어 각각의 모델을 Goal, Penatly, Shots on target, Shots off target, non-highlight 5개의 target data를 기준으로 학습시킵니다.<br>
+
+마지막으로 audio 부분과 video 부분에서 얻은 데이터를 결합하여 하나의 Tensor를 생성하고, 이를 Fully Connected Layer 모델을 이용하여 최종적으로 highlight or non-highlight 이진 분류를 수행합니다. 
+
+<br>
 
 ### Working Environment
 
 Data preprocessing : Local(CPU : Intel(R) Core(TM) Ultra 5 125H, Memory : 16gb)
+
 Model Training : Collab pro(GPU : A100 gpu)
 
 <br>
@@ -335,4 +343,27 @@ https://github.com/lucidrains/vit-pytorch/blob/main/images/vit.gif
 <br>
 
 # VI. Conclusion
+
+도출된 하이라이트 중 하나입니다. 추출된 모든 하이라이트는 위의 >> << 파일에 올려두었습니다. 
+
+<br>
+<br>
+
+최종적으로 우리는 SoccerNet에서 축구 경기 영상을 제공받아 highlight(Goal, Penatly, Shots on target, Shots off target)와 non-highlight로 분류하여 audio와 video로 나누어 학습시킨 후 Concatenate하여 highlight or non-highlight 이진분류를 수행하는 일련의 과정을 통해 축구 하이라이트 영상을 뽑아내겠다는 목표를 성공적으로 수행했습니다. 
+<br>
+<br>
+### 아쉬운점 및 개선점
+도출된 하이라이트 영상들을 살펴보니, 우리가 원했던 highlight 부분은 많이 없고 선수 클로즈업 부분과 공격전개 부분이 많이 보였습니다. 그리고 프리킥과 같이 정적인 상황에서 갑자기 골이 들어가는 부분들은 제대로 학습을 하지 못한 듯 보였습니다. 이유를 고민해 보니 데이터 전처리 과정에서 highlight 부분의 앞 10초, 뒤 5초 총 15초를 highlight로 학습시킨 것이 문제가 되었다는 결론을 내렸습니다. 패스 장면은 학습 데이터셋에서 많은 부분을 차지하고 있고 클로즈업 장면은 기존 화면과 확연하게 바뀌기 때문에 모델 학습이 이런 부분들에 더 치중되어 진행되었고, 실제 골이 들어가는 부분이나 슈팅을 하는 부분은 비중을 적게 차지하여 학습되지 못한 것으로 보입니다. 
+<br>
+만약 highlight 부분을 앞뒤 1~2초 정도로 짧게 잡아 모델을 학습시키고, highlight 추출시 highlight로 예측한 부분의 앞뒤 영상을 붙이는 방식으로 진행하였다면 지금보다 더 좋은 결과를 이끌어 낼 수 있었을 것이라고 생각하여 앞으로의 개선이 기대되는 상황입니다.
+
+
+
+
+
+
+
+
+
+
 
