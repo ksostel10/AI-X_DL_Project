@@ -369,11 +369,27 @@ https://github.com/user-attachments/assets/d0040fc1-71b2-4030-919f-84825a72dc2e
 도출된 하이라이트 영상들을 살펴보니, 우리가 원했던 highlight 부분은 많이 없고 선수 클로즈업 부분과 공격전개 부분이 많이 보였습니다. 그리고 프리킥과 같이 정적인 상황에서 갑자기 골이 들어가는 부분들은 제대로 학습을 하지 못한 듯 보였습니다. 이유를 고민해 보니 데이터 전처리 과정에서 highlight 부분의 앞 10초, 뒤 5초 총 15초를 highlight로 학습시킨 것이 문제가 되었다는 결론을 내렸습니다. 패스 장면은 학습 데이터셋에서 많은 부분을 차지하고 있고 클로즈업 장면은 기존 화면과 확연하게 바뀌기 때문에 모델 학습이 이런 부분들에 더 치중되어 진행되었고, 실제 골이 들어가는 부분이나 슈팅을 하는 부분은 비중을 적게 차지하여 학습되지 못한 것으로 보입니다. 
 <br>
 만약 highlight 부분을 앞뒤 1~2초 정도로 짧게 잡아 모델을 학습시키고, highlight 추출시 highlight로 예측한 부분의 앞뒤 영상을 붙이는 방식으로 진행하였다면 지금보다 더 좋은 결과를 이끌어 낼 수 있었을 것이라고 생각하여 앞으로의 개선이 기대되는 상황입니다.
+<br>
+<br>
+### Source
+- CNN <br>
+https://blog.naver.com/rfs2006/223419122284 <br>
+https://m.blog.naver.com/laonple/222344968031 <br>
+<br>
 
+- GRU <br>
+https://wikidocs.net/22889 <br>
+https://yjjo.tistory.com/18 <br>
+<br>
 
+- ResNet <br>
+https://blog.naver.com/wooy0ng/222653802427 <br>
+<br>
 
-
-
+- vit <br>
+https://mishuni.tistory.com/137 <br>
+https://daebaq27.tistory.com/108 <br>
+https://gaussian37.github.io/dl-concept-vit/ <br>
 
 
 
