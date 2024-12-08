@@ -31,7 +31,7 @@ val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_w
 model = HighlightsClassifier().to(device)
 
 # 손실 함수 및 옵티마이저
-criterion = CrossEntropyLoss()
+criterion = torch.nn.BCEWithLogitsLoss()
 optimizer = Adam(model.parameters(), lr=learning_rate)
 
 # ReduceLROnPlateau 스케줄러 추가
@@ -109,7 +109,7 @@ for epoch in range(num_epochs):
     epoch_time = end_time - start_time
 
     # 모델 저장
-    model_save_path = f"./highlights_classifier{epoch+1}.pth"
+    model_save_path = os.path.join("/content/AIX_DL_highlight_detector/highlights_classifier/checkpoint", f"./highlights_classifier{epoch+1}.pth")
     torch.save(model.state_dict(), model_save_path)
     print(f"Model saved to {model_save_path}")
 

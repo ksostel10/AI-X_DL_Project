@@ -120,7 +120,6 @@ class HighlightsClassifier(torch.nn.Module):
         self.dropout_audio = torch.nn.Dropout(p=0.2)  # 오디오 경로 dropout
         self.dropout_video = torch.nn.Dropout(p=0.2)  # 비디오 경로 dropout
         self.dropout_fc = torch.nn.Dropout(p=0.3)     # Fully Connected Layer dropout
-        self.softmax = torch.nn.Softmax(dim=1)
 
     def forward(self, x1, x2):
         # 오디오 경로 처리
@@ -148,6 +147,6 @@ class HighlightsClassifier(torch.nn.Module):
         x3 = self.relu(x3)  # ReLU
         x3 = self.dropout_fc(x3)  # Dropout 적용
         x3 = self.fc2(x3)
-        x3 = self.softmax(x3)  # Softmax
+        x3 = torch.softmax(x3, dim=1)
 
         return x3
