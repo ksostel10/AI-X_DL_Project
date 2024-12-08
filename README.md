@@ -40,7 +40,7 @@ Task :
 
 ### Goal
 
-우리의 목표는 >>   &nbsp;&nbsp;&nbsp;   << 입니다. 이 목표를 위해서 진행되는 과정은 다음과 같습니다. 우리는 처음에 audio 부분과 video 부분을 따로 처리합니다. 먼저 축구 경기 동영상에서 audio와 video를 분리하여 추출합니다. 이때, video는 초당 5프레임으로 설정하여 추출합니다. 이후 audio의 경우에는 (Subsampling layer) CNN 모델을 이용하여 maxPooling 방식으로 길이를 줄이며 각 하이라이트의 중요한 특징을 추출하고, (Sequence to Vector)GRU 모델을 사용하여 시퀀스 데이터를 고정 길이 벡터로 변환합니다. video의 경우에는 resNet 모델을 이용하여 각 하이라이트의 중요한 특징을 추출하고, (Sequence to Vector)GRU 모델을 사용하여 시퀀스 데이터를 고정 길이 벡터로 변환합니다. 마지막으로 audio 부분과 video 부분에서 얻은 데이터를 결합하여 하나의 Tensor를 생성하고, 이를 Fully Connected Layer 모델을 이용하여 최종적으로 highlight or non-highlight 이진 분류를 수행합니다. 
+우리의 목표는 "축구 하이라이트 자동 추출 모델 만들기" 입니다. 이 목표를 위해서 진행되는 과정은 다음과 같습니다. 우리는 처음에 audio 부분과 video 부분을 따로 처리합니다. 먼저 축구 경기 동영상에서 audio와 video를 분리하여 추출합니다. 이때, video는 초당 5프레임으로 설정하여 추출합니다. 이후 audio의 경우에는 (Subsampling layer) CNN 모델을 이용하여 maxPooling 방식으로 길이를 줄이며 각 하이라이트의 중요한 특징을 추출하고, (Sequence to Vector)GRU 모델을 사용하여 시퀀스 데이터를 고정 길이 벡터로 변환합니다. video의 경우에는 resNet 모델을 이용하여 각 하이라이트의 중요한 특징을 추출하고, (Sequence to Vector)GRU 모델을 사용하여 시퀀스 데이터를 고정 길이 벡터로 변환합니다. 마지막으로 audio 부분과 video 부분에서 얻은 데이터를 결합하여 하나의 Tensor를 생성하고, 이를 Fully Connected Layer 모델을 이용하여 최종적으로 highlight or non-highlight 이진 분류를 수행합니다. 
 
 # II. Datasets
 
