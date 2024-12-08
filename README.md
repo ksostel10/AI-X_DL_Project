@@ -344,11 +344,24 @@ https://github.com/lucidrains/vit-pytorch/blob/main/images/vit.gif
 
 # VI. Conclusion
 
-도출된 하이라이트 중 하나입니다. 추출된 모든 하이라이트는 위의 >> << 파일에 올려두었습니다. 
+도출된 하이라이트 중 일부입니다. 추출된 모든 하이라이트는 위의 "detected_highlights" 파일에 올려두었습니다. 
 
+
+
+
+https://github.com/user-attachments/assets/2367afd9-aab9-4322-bcd2-68a0bbab5e5e
+
+
+
+https://github.com/user-attachments/assets/d0040fc1-71b2-4030-919f-84825a72dc2e
+
+
+
+우리가 highlight로 지정했던 Peanlty와 Shots off target을 잘 분류하는 모습이다.
 <br>
 <br>
-
+<br>
+<br>
 최종적으로 우리는 SoccerNet에서 축구 경기 영상을 제공받아 highlight(Goal, Penatly, Shots on target, Shots off target)와 non-highlight로 분류하여 audio와 video로 나누어 학습시킨 후 Concatenate하여 highlight or non-highlight 이진분류를 수행하는 일련의 과정을 통해 축구 하이라이트 영상을 뽑아내겠다는 목표를 성공적으로 수행했습니다. 
 <br>
 <br>
