@@ -386,7 +386,7 @@ https://yjjo.tistory.com/18 <br>
 https://blog.naver.com/wooy0ng/222653802427 <br>
 <br>
 
-- vit <br>
+- ViT <br>
 https://mishuni.tistory.com/137 <br>
 https://daebaq27.tistory.com/108 <br>
 https://gaussian37.github.io/dl-concept-vit/ <br>
