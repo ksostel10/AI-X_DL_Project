@@ -23,7 +23,7 @@ VI. Conclusion
 
 김영일 / 경제금융학과 / il0906@naver.com
 
-Task : 모델에 대한 설명글 작성 / VIT 코드 작성 / 전체적인 블로그 글 작성
+Task : 모델에 대한 설명글 작성 / 전체적인 블로그 글 작성 / 영상 촬영
 
 정재희 / 경영학부 / ksostel10@naver.com
 
