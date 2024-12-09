@@ -1,7 +1,7 @@
 # 축구 하이라이트 영상 탐지, 추출, 생성기
 24-2 한양대학교 AI-X 딥러닝 프로젝트
 
-(영상)
+(영상) <br>
 https://youtu.be/7-xuGkrFdZg
 
 # Contents
