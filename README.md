@@ -607,20 +607,13 @@ https://github.com/lucidrains/vit-pytorch/blob/main/images/vit.gif
 
 # VI. Conclusion
 
-도출된 하이라이트 중 일부입니다. 추출된 모든 하이라이트는 위의 "detected_highlights" 파일에 올려두었습니다. 
-
-
-
-
-https://github.com/user-attachments/assets/2367afd9-aab9-4322-bcd2-68a0bbab5e5e
-
-
+도출된 하이라이트 중 하나입니다. 추출된 모든 하이라이트는 위의 "detected_highlights" 파일에 올려두었습니다. 
 
 https://github.com/user-attachments/assets/d0040fc1-71b2-4030-919f-84825a72dc2e
 
 
 
-우리가 highlight로 지정했던 Peanlty와 Shots off target을 잘 분류하는 모습이다.
+우리가 highlight로 지정했던 Shots off target을 잘 분류하는 모습이다.
 <br>
 <br>
 <br>
