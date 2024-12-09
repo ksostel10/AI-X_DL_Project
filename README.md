@@ -42,14 +42,14 @@ Task : 전체적인 모델 구조 설계 / 모델 코드 작성 / 데이터 전�
 
  지금 우리 사회에서 사람들이 가장 많이 향유하고 있는 취미를 하나만 선정하자면 단연코 유튜브 시청일 것입니다. 많은 사람들이 영상으로 된 컨텐츠, 특히 유튜브 쇼츠의 등장으로 짧지만 큰 임팩트를 주는 영상을 선호하는 방향으로 흘러가고 있습니다. 이러한 사회적 상황에 맞게, 우리는 긴 영상에서 highlight 부분을 자동으로 추출해 줄 수 있는 딥러닝 모델을 구현하려 합니다. 
 
- 그 중에서도 우리는 축구 경기 영상을 선택했습니다. 축구는 전반전과 후반전 각 45분에 추가시간까지 부여되기 때문에 총 영상의 길이가 100분 이상인 경우가 대부분입니다. 이 중에서 Goal(골), Penalty(패널티킥킥), Shots on target(유효슈팅), Shots off target(유효슈팅이 아닌 슈팅) 등 축구 경기 내에서 주목할 만한 부분들만 추출하여 영상으로 제작할 수 있다면 짧은 시간만으로 대부분의 축구 경기 내용을 파악하면서 더 재미있게 축구 영상을 시청할 수 있을 것라고 판단했습니다.
+ 그 중에서도 우리는 축구 경기 영상을 선택했습니다. 축구는 전반전과 후반전 각 45분에 추가시간까지 부여되기 때문에 총 영상의 길이가 100분 이상인 경우가 대부분입니다. 이 중에서 Goal(골), Penalty(페널티킥), Shots on target(유효슈팅), Shots off target(유효슈팅이 아닌 슈팅) 등 축구 경기 내에서 주목할 만한 부분들만 추출하여 영상으로 제작할 수 있다면 짧은 시간만으로 대부분의 축구 경기 내용을 파악하면서 더 재미있게 축구 영상을 시청할 수 있을 것라고 판단했습니다.
 
 ### Goal
 
  우리의 목표는 "축구 하이라이트 자동 추출 모델 만들기" 입니다. 이 목표를 위해서 진행되는 과정은 다음과 같습니다.
  
 <br>
-가장 먼저 경기당 100분정도 되는 축구영상을 highlight와 non-highlight로 분류합니다. 이때 하이라이트의 기준은 Goal(골), Peanlty(반칙), Shots on target(유효슈팅), Shots off target(유효슈팅이 아닌 슈팅)으로 지정하여 사건이 발생한 순간의 앞 10초, 뒤 5초를 포함하여 총 15초의 영샹을 하이라이트로 분류합니다. 그 외 나머지 부분은 non-highlight로 분류합니다.
+가장 먼저 경기당 100분정도 되는 축구영상을 highlight와 non-highlight로 분류합니다. 이때 하이라이트의 기준은 Goal(골), Peanlty(페널티킥), Shots on target(유효슈팅), Shots off target(유효슈팅이 아닌 슈팅)으로 지정하여 사건이 발생한 순간의 앞 10초, 뒤 5초를 포함하여 총 15초의 영샹을 하이라이트로 분류합니다. 그 외 나머지 부분은 non-highlight로 분류합니다.
 
 <br>
 <br>
@@ -628,7 +628,9 @@ https://github.com/user-attachments/assets/d0040fc1-71b2-4030-919f-84825a72dc2e
 최종적으로 우리는 SoccerNet에서 축구 경기 영상을 제공받아 highlight(Goal, Penatly, Shots on target, Shots off target)와 non-highlight로 분류하여 audio와 video로 나누어 학습시킨 후 Concatenate하여 highlight or non-highlight 이진분류를 수행하는 일련의 과정을 통해 축구 하이라이트 영상을 뽑아내겠다는 목표를 성공적으로 수행했습니다. 
 <br>
 <br>
-### 한계점 및 개선점
+
+###  한계점 및 개선점
+
 <br>
 - 너무 긴 학습영상
 <br>
@@ -639,7 +641,9 @@ https://github.com/user-attachments/assets/d0040fc1-71b2-4030-919f-84825a72dc2e
 
 <br>
 <br>
+
 ### Source
+
 - CNN <br>
 https://blog.naver.com/rfs2006/223419122284 <br>
 https://m.blog.naver.com/laonple/222344968031 <br>
