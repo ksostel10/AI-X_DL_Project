@@ -360,7 +360,7 @@ val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_w
 이는 colab_main.py에서 AudioVideoDataset을 불러와 train, valuation의 data_loader를 구성하는 과정입니다. 이때 패딩작업은 AudioVideoDatset.py 파일에서 collate_fn을 정의하여 audio, video가 각각 텐서의 차원에 맞게 패딩을 할 수 있도록 해 주었고 DataLoader의 파라미터에 정의된 collate_fn 함수를 가져와 패딩작업이 수행될 수 있도록 하였습니다.  
 <br>
 <br>
-## 3. 모델 학습
+## 4. 모델 학습
 ```python
 import os
 import time  # 시간 측정을 위한 모듈
@@ -491,7 +491,7 @@ colab_main.py는 코랩 환경에서 돌아갈 수 있도록 경로 설정을해
 <br>
 <br>
 
-## 4. 학습된 모델로 영상 추출
+## 5. 학습된 모델로 영상 추출
 
 ```python
 import os
