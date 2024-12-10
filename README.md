@@ -2,7 +2,7 @@
 24-2 한양대학교 AI-X 딥러닝 프로젝트
 
 (영상) <br>
-https://youtu.be/7-xuGkrFdZg
+[https://youtu.be/7-xuGkrFdZg](https://youtu.be/sjSZGk7DpK8)
 
 # Contents
 Members
