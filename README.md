@@ -30,7 +30,7 @@ Task : 모델에 대한 설명글 작성 / 전체적인 블로그 글 작성 / �
 
 정재희 / 경영학부 / ksostel10@naver.com
 
-Task : 영상 원본에서 하이라이트 부분 추출해 학습데이터 구성하는 코드 작성 / 데이터 전처리(오디오 변환, 프레임추출, 데이터로더 구성 등) 코드 작성 / 영상 추출 코드 작성 / 학습 코드 돌리고 디버깅
+Task : 영상 원본에서 하이라이트 부분 추출해 학습데이터 구성하는 코드 작성 / 데이터 전처리(오디오 변환, 프레임추출, 데이터로더 구성 등) 코드 작성 / 영상 추출 코드 작성 / 학습 코드 돌리고 디버깅 / 코드 실행 순서 및 설명 관련 글 작성
 
 양형석 / 전기공학부 / yhs30480@gmail.com
 
@@ -80,7 +80,7 @@ Model Training : Collab pro(GPU : A100 gpu)
 https://www.soccer-net.org/home
 <br>
 <br>
-데이터셋은 SoccerNet의 축구 경기 영상 데이터를 이용하였습니다. SoccerNet은 축구 비디오 분석을 위한 대규모 데이터셋으로, 다양한 연구와 산업 응용을 지원하기 위해 개발되었습니다. Python 라이브러리를 통하여 쉽게 접근할 수 있지만, 비밀번호를 요구하기 때문에 SoccerNet 사이트에 들어가서 직접 신청서를 작성해야 합니다. 아래의 코드를 실행하면 SoccerNet에서 제공하는 축구경기 영상과 라벨링 데이터를 얻을 수 있습니다.
+데이터셋은 SoccerNet의 축구 경기 영상 데이터를 이용하였습니다. SoccerNet은 축구 비디오 분석을 위한 대규모 데이터셋으로, 다양한 연구와 산업 응용을 지원하기 위해 개발되었습니다. 아래의 코드를 실행하면 SoccerNet에서 제공하는 축구경기 영상과 라벨링 데이터를 얻을 수 있습니다. 코드는 "1_224p.mkv", "2_224p.mkv"의 전반 후반 영상 모두를 활용하는 방식으로 짜 놓았지만 실제로 저희는 로컬 저장장공간 부족으로 인해 "1_224p.mkv"만만 학습데이터 구성에 활용하였습니다.
 <br>
 <br>
 SoccerNet 라이브러리 다운로드
@@ -95,20 +95,9 @@ Python에서 SoccerNet 라이브러리에 접근하는 코드
 import SoccerNet
 from SoccerNet.Downloader import SoccerNetDownloader
 
-mySoccerNetDownloader = SoccerNetDownloader(LocalDirectory=r"SoccerNet")
-
-mySoccerNetDownloader.password = "이곳에 비밀번호를 입력"
-```
-
-축구 경기 영상 다운로드
-
-```python
+mySoccerNetDownloader = SoccerNetDownloader(LocalDirectory=r"경로 입력")
+mySoccerNetDownloader.password = "s0cc3rn3t"
 mySoccerNetDownloader.downloadGames(files=["1_224p.mkv", "2_224p.mkv"], split=["train", "valid", "test"])
-```
-
-라벨링 된 데이터 다운로드
-
-```python
 mySoccerNetDownloader.downloadGames(files=["Labels-v2.json"], split=["train", "valid", "test"])
 ```
 
@@ -138,6 +127,7 @@ mySoccerNetDownloader.downloadGames(files=["Labels-v2.json"], split=["train", "v
 ### Video 데이터 추출
 ```python
 # data_preparation/clip_create.py
+
 def ffmpeg_extract_subclip_accurate(input_path, start_time, end_time, output_path):
     command = [
         "ffmpeg",
@@ -192,16 +182,42 @@ if clip_key not in processed_clips:
                      ffmpeg_extract_subclip_accurate(video2_path, start_time, end_time, output_path)
              else:
                  cnt -= 1
+
+root_dir = r"영상 데이터 경로 선택"
+create_save(root_dir)
 ```
-영상 추출의 핵심 코드는 다음과 같습니다. json 파일에서 특정 장면의 시간정보를 가져와 해당 시점 10초 전, 5초 뒤 총 15초를 학습데이터의 길이로 설정하고 저희가 지정한 하이라이트 레이블일 경우 "highlights_n.mkv", 저희가 지정한 레이블이 아닐 경우 "non-highlight_n.mkv"로 구분하여 저정할 수 있도록 하였습니다. 학습데이터의 길이를 15초로 지정한 이유는 딱 골/슈팅 장면만 판별하는 것이 아니라 골/유효슈팅으로 이어지는 빌드업 장면까지 포함하여 학습할 수 있도록 하여 좀 더 완전한 하이라이트 장면을 추출할 수 있도록 하기 위함입니다. 이렇게 highlights/non-highlights에 해당하는 시간을 지정한 뒤 subproccess 모듈을 활용해 영상의 추출 작업을 수행하였습니다. 
+코드 설명: 영상 추출의 핵심 코드는 다음과 같습니다. json 파일에서 특정 장면의 시간정보를 가져와 해당 시점 10초 전, 5초 뒤 총 15초를 학습데이터의 길이로 설정하고 저희가 지정한 하이라이트 레이블일 경우 "highlights_n.mkv", 저희가 지정한 레이블이 아닐 경우 "non-highlight_n.mkv"로 구분하여 저정할 수 있도록 하였습니다. 학습데이터의 길이를 15초로 지정한 이유는 딱 골/슈팅 장면만 판별하는 것이 아니라 골/유효슈팅으로 이어지는 빌드업 장면까지 포함하여 학습할 수 있도록 하여 좀 더 완전한 하이라이트 장면을 추출할 수 있도록 하기 위함입니다. 이렇게 highlights/non-highlights에 해당하는 시간을 지정한 뒤 subproccess 모듈을 활용해 영상의 추출 작업을 수행하였습니다. 
+<br>
+<br>
+실행방식: 코드에 폴더를 생성하는 부분을 넣어놓지 않아서 우선 로컬 공간에 몇개의 폴더가 준비돼있어야합니다. 저희는 cliped_data 퐅더 -> video, audio 폴더 -> 각 폴더 안에 highlights, non-highlights 폴더를 만들어 놓은 다음 하이라이트 영상 추출 코드를 실행하였습니다. 실행은 터미널에 python clip_create.py를 입력하시면 됩니다. 
 <br>
 <br>
 ### Audio 데이터 추출
+다음은 추출된 15초짜리 개별 하이라이트 영상에서 오디오를 추출하는 작업입니다. 이 작업은 ffmpeg 모듈을 활용해 video 데이터에서 audio 부분만 추출하는 방식으로 수행하였습니다. 경로설정에 유의해 python extract_audio.py로 해당 파일을 실행하시면 오디오를 추출할 수 있습니다.
 ```python
 # data_preparation/extract_audio.py
-ffmpeg.input(video_path, ss=0, accurate_seek=None).output(audio_path, vn=None,acodec="pcm_s16le", ar=44100, avoid_negative_ts="make_zero").run()
+
+import ffmpeg
+import os
+
+def extract(video_path, audio_path):
+    ffmpeg.input(video_path, ss=0, accurate_seek=None).output(audio_path, vn=None, acodec="pcm_s16le", ar=44100, avoid_negative_ts="make_zero").run()
+
+def extract_audio_from_video(extracted_video_path, base_audio_path):
+    for target in os.listdir(extracted_video_path):
+        target_path = os.path.join(extracted_video_path, target)
+
+        for entry in os.listdir(target_path):
+            video_path = os.path.join(target_path, entry)
+            audio_path = os.path.join(base_audio_path, target, entry.split(".")[0] + ".wav")
+            extract(video_path, audio_path)
+
+
+base_audio_path = r"C:\Users\ksost\soccer_env\cliped_data\audio"
+extracted_video_path = r"C:\Users\ksost\soccer_env\cliped_data\video"
+extract_audio_from_video(extracted_video_path, base_audio_path)
 ```
-audio 데이터는 ffmpeg 모듈을 활용해 video 데이터에서 audio 부분만 추출하는 방식으로 준비하였습니다. 
+
 <br>
 
 ## 3. 데이터 전처리
@@ -321,7 +337,10 @@ def collate_fn(batch):
 audio 데이터는 우선 stero type인 원본 audio를 양 쪽값의 평균치로 mono type으로 바꿔준뒤  멜 스펙토그램으로 변환하고 db(데시벨)형식으로 변환하여 소리의 크기에 따른 특징이 추출될 수 있도록 하였습니다.
 <br>
 <br>
-video 데이터의 경우 우선 저희가 활용한 224p의 영상의 프레임은 25p/s입니다. 따라서 5프레임마다 하나씩 프레임을 추출하여 초당 5개의 프레임이 추출될 수 있도록 하였습니다. 그렇게 총 15초에 해당하는 75개의 프레임을 추출하였고 프레임마다 RandomResizedCrop, RandomRotation, GaussianBlur를 적용하여 data augmentation을 해 주었습니다.
+video 데이터의 경우 우선 저희가 활용한 224p의 영상의 프레임은 25p/s입니다. 따라서 5프레임마다 하나씩 프레임을 추출하여 초당 5개의 프레임이 추출될 수 있도록 하였습니다. 그렇게 총 15초에 해당하는 75개의 프레임을 추출하였고 프레임마다 RandomResizedCrop, RandomRotation, GaussianBlur를 적용하여 data augmentation을 해 주었습니다. 
+<br>
+<br>
+코드 실행: AudioVideoDataset.py에는 데이터를 전처리하는 클래스만 정의돼 있습니다. colab_main.py 파일에서 dataset을 로드할 때 해당 클래스를 불러와 오디오, 비디오가 있는 폴더의 경로를 넣어주면 바로 전처리가 수행됩니다. 아래 코드부분에서 확인하실 수 있습니다. 
 <br>
 <br>
 
@@ -339,12 +358,315 @@ train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, nu
 val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=collate_fn)
 ```
 이는 colab_main.py에서 AudioVideoDataset을 불러와 train, valuation의 data_loader를 구성하는 과정입니다. 이때 패딩작업은 AudioVideoDatset.py 파일에서 collate_fn을 정의하여 audio, video가 각각 텐서의 차원에 맞게 패딩을 할 수 있도록 해 주었고 DataLoader의 파라미터에 정의된 collate_fn 함수를 가져와 패딩작업이 수행될 수 있도록 하였습니다.  
+<br>
+<br>
+## 3. 모델 학습
+```python
+import os
+import time  # 시간 측정을 위한 모듈
+import torch
+from torch.utils.data import DataLoader, random_split
+from torch.nn import CrossEntropyLoss
+from torch.optim import Adam
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+from AudioVideoDataset import AudioVideoDataset, collate_fn
+from model import HighlightsClassifier
+
+# 설정
+audio_dir = "/content/drive/MyDrive/AIX_DL_highlight_detector/audio"  # 오디오 데이터 디렉토리 경로
+video_dir = "/content/drive/MyDrive/AIX_DL_highlight_detector/video"  # 비디오 데이터 디렉토리 경로
+batch_size = 4
+learning_rate = 1e-4
+num_epochs = 20
+validation_split = 0.2
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# 데이터셋 로드
+dataset = AudioVideoDataset(audio_dir, video_dir)
+val_size = int(len(dataset) * validation_split)
+train_size = len(dataset) - val_size
+
+# 데이터셋 분할
+train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=collate_fn)
+val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=collate_fn)
+
+# 모델 초기화
+model = HighlightsClassifier().to(device)
+
+# 손실 함수 및 옵티마이저
+criterion = torch.nn.BCEWithLogitsLoss()
+optimizer = Adam(model.parameters(), lr=learning_rate)
+
+# ReduceLROnPlateau 스케줄러 추가
+scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=3, verbose=True)
+
+# 학습 및 검증 루프
+for epoch in range(num_epochs):
+    start_time = time.time()  # 에포크 시작 시간 기록
+
+    # 학습 단계
+    model.train()
+    train_loss = 0.0
+    train_correct = 0
+    train_total = 0
+
+    for audio, video, labels in train_loader:
+        audio = audio.to(device)
+        video = video.to(device)
+        labels = labels.to(device)
+
+        # 옵티마이저 초기화
+        optimizer.zero_grad()
+
+        # 모델의 순전파
+        outputs = model(audio, video)
+
+        # 손실 계산
+        loss = criterion(outputs, labels)
+        train_loss += loss.item()
+
+        # 역전파 및 매개변수 업데이트
+        loss.backward()
+        optimizer.step()
+
+        # 정확도 계산
+        _, predicted = torch.max(outputs, 1)
+        train_correct += (predicted == labels).sum().item()
+        train_total += labels.size(0)
+
+    train_loss /= len(train_loader)
+    train_accuracy = train_correct / train_total * 100
+
+    # 검증 단계
+    model.eval()
+    val_loss = 0.0
+    val_correct = 0
+    val_total = 0
+
+    with torch.no_grad():
+        for audio, video, labels in val_loader:
+            audio = audio.to(device)
+            video = video.to(device)
+            labels = labels.to(device)
+
+            # 모델의 순전파
+            outputs = model(audio, video)
+
+            # 손실 계산
+            loss = criterion(outputs, labels)
+            val_loss += loss.item()
+
+            # 정확도 계산
+            _, predicted = torch.max(outputs, 1)
+            val_correct += (predicted == labels).sum().item()
+            val_total += labels.size(0)
+
+    val_loss /= len(val_loader)
+    val_accuracy = val_correct / val_total * 100
+
+    # 스케줄러 업데이트 (검증 손실 기반)
+    scheduler.step(val_loss)
+
+    # 에포크 종료 시간 기록 및 경과 시간 계산
+    end_time = time.time()
+    epoch_time = end_time - start_time
+
+    # 모델 저장
+    model_save_path = os.path.join("/content/AIX_DL_highlight_detector/highlights_classifier/checkpoint", f"./highlights_classifier{epoch+1}.pth")
+    torch.save(model.state_dict(), model_save_path)
+    print(f"Model saved to {model_save_path}")
+
+    # Epoch 결과 출력
+    print(f"Epoch [{epoch+1}/{num_epochs}]")
+    print(f"Train Loss: {train_loss:.4f}, Train Accuracy: {train_accuracy:.2f}%")
+    print(f"Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_accuracy:.2f}%")
+    print(f"Epoch Time: {epoch_time:.2f} seconds")
+```
+colab_main.py는 코랩 환경에서 돌아갈 수 있도록 경로 설정을해 주었다. 각 epoch마다 학습과 검증단계를 거친 모델이 저장될 수 있도록 해 주었는데 자원 문제상 학습데이터를 많이 준비하지 못하였고 train, validation이 들쑥날쑥하며 증가하였을 뿐만 아니라(이 문제는 후술할 한계점/개선점 부분과 관련이 있음)  epoch 횟수도 20으로 짧아 20개의 모델을 전부 저장한 뒤 vaidation accuracy가 크면서 train accuracy가 그렇게 높지 않은 모델(과적합 방지)를 선택하여 실제 추론에 활용하였습니다. 저희는 14번째 epoch의 모델을 활용하였습니다. 아래 사진은 코랩의 A100을 통해 학습시킨 모델의 성능지표입니다.
+
+<img src="https://github.com/user-attachments/assets/5dc990fa-7c2e-40d9-989f-ab45730325dc" width="700" height="700">
+<img src="https://github.com/user-attachments/assets/d27ed445-c273-4c6f-a93d-0257cda8fe51" width="700" height="700">
+
+<br>
+<br>
+
+## 4. 학습된 모델로 영상 추출
+
+```python
+import os
+import cv2
+import torchaudio
+from torchaudio.transforms import MelSpectrogram, AmplitudeToDB
+import torch
+from torchvision import transforms
+from PIL import Image
+from AudioVideoDataset import MinMaxNormalize
+from model import HighlightsClassifier
+import os
+import subprocess
+
+audio_path = r"C:\Users\ksost\soccer_env\test\real_test\1_224p.wav"
+video_path = r"C:\Users\ksost\soccer_env\test\real_test\1_224p.mkv"
+audio_tensor_path = r"C:\Users\ksost\soccer_env\test\real_test\\audio_tensor.pt"
+video_tensor_path = r"C:\Users\ksost\soccer_env\test\real_test\video_tensor.pt"
+checkpoint_path = r"C:\Users\ksost\soccer_env\test\real_test\highlights_classifier14.pth"
+
+# 비디오 45분풀영상 파일 텐서로 변환
+video_transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Resize((224, 224)),
+    transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+])
+video = cv2.VideoCapture(video_path)
+fps = video.get(cv2.CAP_PROP_FPS)
+frame_interval = int(fps / 5)  # 초당 5프레임을 위해 프레임 간격 계산
+frames = []
+frame_count = 0
+while True:
+    ret, frame = video.read()
+    if not ret:
+        break  # 비디오 끝났으면 반복 종료
+    # 지정된 프레임 간격에 따라 프레임을 선택
+    if frame_count % frame_interval == 0:
+        # BGR에서 RGB로 변환
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # ndarray에서 PIL Image로 변환
+        frame = Image.fromarray(frame)
+        # 변환 적용
+        transformed_frame = video_transform(frame)
+        # 리스트에 추가
+        frames.append(transformed_frame)
+    frame_count += 1
+video_tensor = torch.stack(frames)
+
+torch.save(video_tensor, video_tensor_path)
+video.release()
+
+# 오디오 45분짜리 파일 텐서로 변환
+video_tensor = torch.load(video_tensor_path)
+waveform, _ = torchaudio.load(audio_path)
+if waveform.size(0) != 1:
+    waveform = waveform.mean(dim=0, keepdim=True)
+mel_spectrogram = MelSpectrogram(
+    sample_rate=48000, n_fft=400, hop_length=160, n_mels=64
+)
+to_db = AmplitudeToDB()
+normalizer = MinMaxNormalize()
+mel_spec = mel_spectrogram(waveform)
+mel_spec = to_db(mel_spec)
+mel_spec = normalizer(mel_spec)
+mel_spec = mel_spec.permute(2, 0, 1)  # (time, freq, channel) -> (channel, freq, time)
+torch.save(mel_spec, audio_tensor_path)
+
+
+def load_model_from_checkpoint(checkpoint_path, device):
+    model = HighlightsClassifier().to(device)
+    checkpoint = torch.load(checkpoint_path, map_location=device)
+    
+    # 체크포인트에서 모델 상태 로드
+    if 'model_state_dict' in checkpoint:
+        model.load_state_dict(checkpoint['model_state_dict'])
+    else:
+        model.load_state_dict(checkpoint)  # 모델 상태만 저장된 경우 처리
+    
+    model.eval()
+    print(f"Model loaded from checkpoint: {checkpoint_path}")
+    return model
+
+def extract_highlights_time(video_tensor, audio_tensor, model, device):
+    outputs = []
+    highlights_time = []
+    start_frame = 0
+    i = 0
+
+    while True:
+        end_frame = start_frame + 75
+
+        if end_frame >= 12346:
+            return highlights_time
+
+        video = video_tensor[start_frame:end_frame]
+        audio = audio_tensor[start_frame*55:end_frame*55]
+        audio = audio.unsqueeze(0)
+        video = video.to(device)
+        audio = audio.to(device)
+        audio = audio.permute(0, 2, 3, 1) # (batch, channel, freq, time)
+
+
+        with torch.no_grad():
+            output = model(audio, video)
+        print(output)
+
+        output = output.cpu().numpy()
+        outputs.append(output)
+        
+        if output[0, 1] > 0.88:
+            start_time = 3 * i
+            end_time = start_time + 15
+
+            # 연속으로 임계치를 넘었을 때 시작시간은 그대로, 끝나는 시간 가장 마지막껄로 바꿔줌
+            if highlights_time and (start_time < highlights_time[-1][1]):
+                highlights_time[-1] = (highlights_time[-1][0], end_time)
+            else:
+                highlights_time.append((start_time, end_time))
+        print(highlights_time)
+        
+        start_frame += 15
+        i += 1
+
+def ffmpeg_extract_subclip_accurate(input_path, start_time, end_time, output_path):
+    command = [
+        "ffmpeg",
+        "-y",  # 기존 파일 덮어쓰기
+        "-i", input_path,  # 입력 파일
+        "-ss", str(start_time),  # 시작 시간
+        "-to", str(end_time),  # 종료 시간
+        "-c:v", "libx264",  # 비디오 코덱: H.264
+        "-preset", "fast",  # 인코딩 속도와 품질의 균형
+        "-crf", "23",  # 비디오 품질
+        "-c:a", "aac",  # 오디오 코덱
+        "-b:a", "128k",  # 오디오 비트레이트
+        output_path
+    ]
+    subprocess.run(command, check=True)
+
+def create_save(video_path, highlights_time):
+    # 동영상 파일이 있는지 확인
+    if os.path.exists(video_path):
+        for i, (start_time, end_time) in enumerate(highlights_time): 
+            output_path = os.path.join(r"C:\Users\ksost\soccer_env\test\real_test", f"highlights_{i}.mkv")
+            if not os.path.exists(output_path):
+                ffmpeg_extract_subclip_accurate(video_path, start_time, end_time, output_path)
+
+
+# 실행
+video_tensor = torch.load(video_tensor_path)
+audio_tensor = torch.load(audio_tensor_path)
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# # 체크포인트에서 모델 불러오기
+model = load_model_from_checkpoint(checkpoint_path, device)
+
+# # 하이라이트 추출 및 동영상 저장
+highlights_time = extract_highlights_time(video_tensor, audio_tensor, model, device)
+create_save(video_path, highlights_time)
+```
+다음은 학습된 모델을 바탕으로 영상의 하이라이트 장면을 판별해 추출하는 코드입니다. 먼저 코랩에 저장해놨던 checkpoint 모델도 로컬로 직접 가져와 추론 모델을 준비시켜놓았습니다. 이후 학습에 이용돼지 않았던 다른 1_224p.mkv 파일을 준비하고 extract_aduio.py 파일을 활용해 오디오 파일을 생성해 주었습니다. 이후 extract_highlights.py 파일을 실행시키만 다음 부분들이 실행됩니다. <br> <br> 
+전체 동영상의 텐서, 전체 오디오의 텐서를 추출해 audio_tensor.pt, video_tensor.pt 파일로 저장 <br><br>
+해당 텐서를 모델에 통과시켜 하이라이트일 확률을 도출. 이때 duration이 15초일 때 프레임 구간을 계산하여 해당 부분을 추출하고 모델에 통과시킨 뒤 3초 간격으로 이동하면서 해당 작업을 반복해주었음 <br><br>
+하이라이트로 판별되었으면 해당 텐서 부분의 start_time과 end_time을 리스트 변수에 저장. 이때 텐서는 프레임별로 저장돼 있기 때문에 224p영상이 초당 25프레임인 것을 활용해 프레임 위치로부터 시간 값 도출 가능 <br><br>
+확보한 하이라이트 시간값들에 해당하는 영상을 추출 <br><br> 
+이 작업들은 extract_highlights.py를 실행하면 자동으로 이루어집니다. 이 작업이 끝나면 하이라이트 영상들은 모두 추출되게 됩니다! 이어붙이는 작업에 해당하는 코드는 시간관계상 짜지 못하였고 개별적인 하이라이트 파일로만 존재합니다.
+
 
 
 # III. Model Architecture
 ![image](https://github.com/user-attachments/assets/991be364-ada3-4eb6-8846-46096e22517e)
 
-위의 그림은 저희가 만든 모델의 전체 구조입니다. Input tensor의 변화를 자세히 살펴보겠습니다.
+위의 그림은 저희가 만든 모델의 전체 구조입니다. 모델을 구성할 때 가장 시간이 많이 들었던 작업은 데이터가 여러 모델들을 통과할 수 있도록 차원을 조정해주는 작업이었습니다. 따라서 Input tensor의 변화를 자세히 살펴보겠습니다.
+
 ## Video part
 그림에서 S는 Sequence, C는 Channel, H는 Height, W는 Width를 의미합니다.
 
