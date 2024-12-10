@@ -6,7 +6,7 @@ from torchaudio.transforms import FrequencyMasking, TimeMasking,  MelSpectrogram
 import torch.nn as nn
 import torch
 from torchvision import transforms
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 from torch.nn.utils.rnn import pad_sequence
 
 class MinMaxNormalize(nn.Module):
@@ -42,14 +42,6 @@ class SpecAugment(torch.nn.Module):     # 시간, 주파수 가리기
 
 class AudioVideoDataset(Dataset):
     def __init__(self, audio_dir, video_dir, n_mels=64, num_frames=5):
-        """
-        Args:
-            audio_dir (str): 오디오 파일 디렉토리 경로
-            video_dir (str): 비디오 파일 디렉토리 경로
-            n_mels (int): 멜 스펙트로그램의 멜 필터 개수
-            augment (bool): 오디오 데이터 증강 여부
-            num_frames (int): 비디오에서 추출할 프레임 간격
-        """
         self.audio_dir = audio_dir
         self.video_dir = video_dir
         self.n_mels = n_mels
@@ -114,13 +106,6 @@ class AudioVideoDataset(Dataset):
         return mel_spec, video_tensor, label
 
     def _load_video_frames(self, video_path):
-        """
-        비디오 파일에서 프레임을 추출합니다.
-        Args:
-            video_path (str): 비디오 파일 경로
-        Returns:
-            torch.Tensor: (num_frames, channels, height, width) 형태의 텐서
-        """
         cap = cv2.VideoCapture(video_path)
         frames = []
         frame_count = 0

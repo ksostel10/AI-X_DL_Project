@@ -1,81 +1,70 @@
 import os
 import cv2
-import io
 import torchaudio
-import ffmpeg
-import torchaudio.transforms as T
 from torchaudio.transforms import MelSpectrogram, AmplitudeToDB
-import torch.nn as nn
 import torch
 from torchvision import transforms
 from PIL import Image
 from AudioVideoDataset import MinMaxNormalize
 from model import HighlightsClassifier
-import numpy as np
 import os
-import json
 import subprocess
-from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 
 audio_path = r"C:\Users\ksost\soccer_env\test\real_test\1_224p.wav"
 video_path = r"C:\Users\ksost\soccer_env\test\real_test\1_224p.mkv"
-# video_transform = transforms.Compose([
-#     transforms.ToTensor(),
-#     transforms.Resize((224, 224)),
-#     transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
-# ])
-# video = cv2.VideoCapture(video_path)
-# fps = video.get(cv2.CAP_PROP_FPS)
-# frame_interval = int(fps / 5)  # 초당 5프레임을 위해 프레임 간격 계산
-# frames = []
-# frame_count = 0
-# while True:
-#     ret, frame = video.read()
-#     if not ret:
-#         break  # 비디오 끝났으면 반복 종료
-#     # 지정된 프레임 간격에 따라 프레임을 선택
-#     if frame_count % frame_interval == 0:
-#         # BGR에서 RGB로 변환
-#         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-#         # ndarray에서 PIL Image로 변환
-#         frame = Image.fromarray(frame)
-#         # 변환 적용
-#         transformed_frame = video_transform(frame)
-#         # 리스트에 추가
-#         frames.append(transformed_frame)
-#     frame_count += 1
-# video_tensor = torch.stack(frames)
-# output_path = r"C:\Users\ksost\soccer_env\test\real_test\video_tensor.pt"
-# torch.save(video_tensor, output_path)
-# video.release()
-
-# output_path = r"C:\Users\ksost\soccer_env\test\real_test\video_tensor.pt"
-# video_tensor = torch.load(output_path)
-# waveform, _ = torchaudio.load(audio_path)
-# if waveform.size(0) != 1:
-#     waveform = waveform.mean(dim=0, keepdim=True)
-# mel_spectrogram = MelSpectrogram(
-#     sample_rate=48000, n_fft=400, hop_length=160, n_mels=64
-# )
-# to_db = AmplitudeToDB()
-# normalizer = MinMaxNormalize()
-# mel_spec = mel_spectrogram(waveform)
-# mel_spec = to_db(mel_spec)
-# mel_spec = normalizer(mel_spec)
-# mel_spec = mel_spec.permute(2, 0, 1)  # (time, freq, channel) -> (channel, freq, time)
-# output_path = r"C:\Users\ksost\soccer_env\test\real_test\\audio_tensor.pt"
-# torch.save(mel_spec, output_path)
-
-
-
-
-# 체크포인트 경로 설정
+audio_tensor_path = r"C:\Users\ksost\soccer_env\test\real_test\\audio_tensor.pt"
+video_tensor_path = r"C:\Users\ksost\soccer_env\test\real_test\video_tensor.pt"
 checkpoint_path = r"C:\Users\ksost\soccer_env\test\real_test\highlights_classifier14.pth"
 
+# 비디오 45분풀영상 파일 텐서로 변환
+video_transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Resize((224, 224)),
+    transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+])
+video = cv2.VideoCapture(video_path)
+fps = video.get(cv2.CAP_PROP_FPS)
+frame_interval = int(fps / 5)  # 초당 5프레임을 위해 프레임 간격 계산
+frames = []
+frame_count = 0
+while True:
+    ret, frame = video.read()
+    if not ret:
+        break  # 비디오 끝났으면 반복 종료
+    # 지정된 프레임 간격에 따라 프레임을 선택
+    if frame_count % frame_interval == 0:
+        # BGR에서 RGB로 변환
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # ndarray에서 PIL Image로 변환
+        frame = Image.fromarray(frame)
+        # 변환 적용
+        transformed_frame = video_transform(frame)
+        # 리스트에 추가
+        frames.append(transformed_frame)
+    frame_count += 1
+video_tensor = torch.stack(frames)
+
+torch.save(video_tensor, video_tensor_path)
+video.release()
+
+# 오디오 45분짜리 파일 텐서로 변환
+video_tensor = torch.load(video_tensor_path)
+waveform, _ = torchaudio.load(audio_path)
+if waveform.size(0) != 1:
+    waveform = waveform.mean(dim=0, keepdim=True)
+mel_spectrogram = MelSpectrogram(
+    sample_rate=48000, n_fft=400, hop_length=160, n_mels=64
+)
+to_db = AmplitudeToDB()
+normalizer = MinMaxNormalize()
+mel_spec = mel_spectrogram(waveform)
+mel_spec = to_db(mel_spec)
+mel_spec = normalizer(mel_spec)
+mel_spec = mel_spec.permute(2, 0, 1)  # (time, freq, channel) -> (channel, freq, time)
+torch.save(mel_spec, audio_tensor_path)
+
+
 def load_model_from_checkpoint(checkpoint_path, device):
-    """
-    체크포인트에서 모델을 불러옵니다.
-    """
     model = HighlightsClassifier().to(device)
     checkpoint = torch.load(checkpoint_path, map_location=device)
     
@@ -131,9 +120,6 @@ def extract_highlights_time(video_tensor, audio_tensor, model, device):
         i += 1
 
 def ffmpeg_extract_subclip_accurate(input_path, start_time, end_time, output_path):
-    """
-    정확히 동영상을 자르기 위해 FFmpeg의 -accurate_seek 옵션을 사용합니다.
-    """
     command = [
         "ffmpeg",
         "-y",  # 기존 파일 덮어쓰기
@@ -159,10 +145,7 @@ def create_save(video_path, highlights_time):
 
 
 # 실행
-video_path = r"C:\Users\ksost\soccer_env\test\real_test\1_224p.mkv"
-video_tensor_path = r"C:\Users\ksost\soccer_env\test\real_test\video_tensor.pt"
 video_tensor = torch.load(video_tensor_path)
-audio_tensor_path = r"C:\Users\ksost\soccer_env\test\real_test\audio_tensor.pt"
 audio_tensor = torch.load(audio_tensor_path)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

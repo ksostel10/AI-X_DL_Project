@@ -1,6 +1,5 @@
 import os
 import torch
-from torchvision import transforms
 from torchvision.models import resnet50, ResNet50_Weights
 
 
@@ -55,9 +54,7 @@ class Seq2VecGRU_Audio(torch.nn.Module):
         self.fc = torch.nn.Linear(hidden_size * 2, output_size)
 
     def forward(self, x):
-        """
-        x: Tensor of shape (batch_size, seq_len, input_size)
-        """
+
         # GRU를 통해 시퀀스 처리
         _, hidden = self.gru(x)  # rnn_out: (batch_size, seq_len, hidden_size * num_directions)
 
@@ -88,9 +85,6 @@ class Seq2VecGRU_Video(torch.nn.Module):
         self.fc = torch.nn.Linear(hidden_size * 2, output_size)
 
     def forward(self, x):
-        """
-        x: Tensor of shape (batch_size, seq_len, input_size)
-        """
         # GRU를 통해 시퀀스 처리
         _, hidden = self.gru(x)  # rnn_out: (batch_size, seq_len, hidden_size * num_directions)
 

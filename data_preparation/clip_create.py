@@ -1,12 +1,8 @@
 import os
 import json
 import subprocess
-from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 
 def ffmpeg_extract_subclip_accurate(input_path, start_time, end_time, output_path):
-    """
-    정확히 동영상을 자르기 위해 FFmpeg의 -accurate_seek 옵션을 사용합니다.
-    """
     command = [
         "ffmpeg",
         "-y",  # 기존 파일 덮어쓰기
@@ -33,7 +29,7 @@ def create_save(root_dir):
         if os.path.isdir(match_path):
             # JSON 파일 경로 설정
             json_path = os.path.join(match_path, "Labels-v2.json")
-            video1_path = os.path.join(match_path, "1_224p.mkv")  # 기본 비디오 파일 설정 (예: "1_224p.mp4")
+            video1_path = os.path.join(match_path, "1_224p.mkv") # 기본 비디오 파일 설정 (예: "1_224p.mp4")
             video2_path = os.path.join(match_path, "2_224p.mkv")
 
             # 동영상 파일이 있는지 확인
@@ -82,6 +78,5 @@ def create_save(root_dir):
                                 else:
                                     cnt -= 1
 
-                    
 root_dir = r"C:\Users\ksost\soccer_env\base_data\champs_and_epl"
 create_save(root_dir)

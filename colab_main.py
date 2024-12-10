@@ -2,7 +2,6 @@ import os
 import time  # 시간 측정을 위한 모듈
 import torch
 from torch.utils.data import DataLoader, random_split
-from torch.nn import CrossEntropyLoss
 from torch.optim import Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from AudioVideoDataset import AudioVideoDataset, collate_fn
