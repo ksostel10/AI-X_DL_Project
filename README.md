@@ -30,7 +30,7 @@ Task : 모델에 대한 설명글 작성 / 전체적인 블로그 글 작성 / �
 
 정재희 / 경영학부 / ksostel10@naver.com
 
-Task : 영상 원본에서 하이라이트 부분 추출해 학습데이터 구성하는 코드 작성 / 데이터 전처리(오디오 변환, 프레임추출, 데이터로더 구성 등) 코드 작성 / 영상 추출 코드 작성 / 학습 코드 돌리고 디버깅 / 코드 실행 순서 및 설명 관련 글 작성
+Task : 모델 구조 설계 / 영상 원본에서 하이라이트 부분 추출해 학습데이터 구성하는 코드 작성 / 데이터 전처리(오디오 변환, 프레임추출, 데이터로더 구성 등) 코드 작성 / 영상 추출 코드 작성 / 학습 코드 돌리고 디버깅 / 코드 실행 순서 및 설명 관련 글 작성
 
 양형석 / 전기공학부 / yhs30480@gmail.com
 
@@ -126,7 +126,9 @@ mySoccerNetDownloader.downloadGames(files=["Labels-v2.json"], split=["train", "v
 <br>
 ### Video 데이터 추출
 ```python
-# data_preparation/clip_create.py
+import os
+import json
+import subprocess
 
 def ffmpeg_extract_subclip_accurate(input_path, start_time, end_time, output_path):
     command = [
@@ -145,45 +147,66 @@ def ffmpeg_extract_subclip_accurate(input_path, start_time, end_time, output_pat
     ]
     subprocess.run(command, check=True)
 
-first_second_time = entry["gameTime"].split(" - ")[0]
-time_str = entry["gameTime"].split(" - ")[1]
-min, sec = map(int, time_str.split(":"))
-event_time = min * 60 + sec
+def create_save(root_dir):
+    processed_clips = set()
 
-start_time = event_time - 10
-end_time = event_time + 5
-clip_key = (first_second_time, start_time, end_time)
+    # 각 경기 폴더를 순회
+    for match_folder in os.listdir(root_dir):
+        cnt = 0
+        match_path = os.path.join(root_dir, match_folder)
+        if os.path.isdir(match_path):
+            # JSON 파일 경로 설정
+            json_path = os.path.join(match_path, "Labels-v2.json")
+            video1_path = os.path.join(match_path, "1_224p.mkv") # 기본 비디오 파일 설정 (예: "1_224p.mp4")
+            video2_path = os.path.join(match_path, "2_224p.mkv")
 
-if clip_key not in processed_clips:
-    processed_clips.add(clip_key)  # 중복 방지
+            # 동영상 파일이 있는지 확인
+            if os.path.exists(video1_path) & os.path.exists(video2_path):
+                # JSON 파일 로드
+                with open(json_path, "r") as f:
+                    label_data = json.load(f)
 
-    if entry["label"] in ["Goal", "Penalty", "Shots off target", "Shots on target"]:
-        label_dir = r"저장 폴더명"
-        clip_name = f"highlights_{len(os.listdir(label_dir)) + 1}.mkv"
-        output_path = os.path.join(label_dir, clip_name)
+                for entry in label_data["annotations"]:
+                    first_second_time = entry["gameTime"].split(" - ")[0]
+                    time_str = entry["gameTime"].split(" - ")[1]
+                    min, sec = map(int, time_str.split(":"))
+                    event_time = min * 60 + sec
 
-        if not os.path.exists(output_path):  # 중복 파일 방지
-            if first_second_time == "1":
-                ffmpeg_extract_subclip_accurate(video1_path, start_time, end_time, output_path)
-            else:
-                ffmpeg_extract_subclip_accurate(video2_path, start_time, end_time, output_path)
-    else:
-         cnt += 1
-         if cnt == 8:
-             label_dir = r"C:\Users\ksost\soccer_env\cliped_data\video\non-highlights"
-             clip_name = f"non-highlight_{len(os.listdir(label_dir)) + 1}.mkv"
-             output_path = os.path.join(label_dir, clip_name)
+                    start_time = event_time - 10
+                    end_time = event_time + 5
+                    clip_key = (first_second_time, start_time, end_time)
 
-             if not os.path.exists(output_path):  # 중복 파일 방지
-                 cnt = 0
-                 if first_second_time == "1":
-                     ffmpeg_extract_subclip_accurate(video1_path, start_time, end_time, output_path)
-                 else:
-                     ffmpeg_extract_subclip_accurate(video2_path, start_time, end_time, output_path)
-             else:
-                 cnt -= 1
+                    if clip_key not in processed_clips:
+                        processed_clips.add(clip_key)  # 중복 방지
 
-root_dir = r"영상 데이터 경로 선택"
+                        if entry["label"] in ["Goal", "Penalty", "Shots off target", "Shots on target"]:
+                            label_dir = r"C:\Users\ksost\soccer_env\cliped_data\video\highlights"
+                            clip_name = f"highlights_{len(os.listdir(label_dir)) + 1}.mkv"
+                            output_path = os.path.join(label_dir, clip_name)
+
+                            if not os.path.exists(output_path):  # 중복 파일 방지
+                                if first_second_time == "1":
+                                    ffmpeg_extract_subclip_accurate(video1_path, start_time, end_time, output_path)
+                                else:
+                                    ffmpeg_extract_subclip_accurate(video2_path, start_time, end_time, output_path)
+
+                        else:
+                            cnt += 1
+                            if cnt == 8:
+                                label_dir = r"C:\Users\ksost\soccer_env\cliped_data\video\non-highlights"
+                                clip_name = f"non-highlight_{len(os.listdir(label_dir)) + 1}.mkv"
+                                output_path = os.path.join(label_dir, clip_name)
+
+                                if not os.path.exists(output_path):  # 중복 파일 방지
+                                    cnt = 0
+                                    if first_second_time == "1":
+                                        ffmpeg_extract_subclip_accurate(video1_path, start_time, end_time, output_path)
+                                    else:
+                                        ffmpeg_extract_subclip_accurate(video2_path, start_time, end_time, output_path)
+                                else:
+                                    cnt -= 1
+
+root_dir = r"영상 데이터 경로"
 create_save(root_dir)
 ```
 코드 설명: 영상 추출의 핵심 코드는 다음과 같습니다. json 파일에서 특정 장면의 시간정보를 가져와 해당 시점 10초 전, 5초 뒤 총 15초를 학습데이터의 길이로 설정하고 저희가 지정한 하이라이트 레이블일 경우 "highlights_n.mkv", 저희가 지정한 레이블이 아닐 경우 "non-highlight_n.mkv"로 구분하여 저정할 수 있도록 하였습니다. 학습데이터의 길이를 15초로 지정한 이유는 딱 골/슈팅 장면만 판별하는 것이 아니라 골/유효슈팅으로 이어지는 빌드업 장면까지 포함하여 학습할 수 있도록 하여 좀 더 완전한 하이라이트 장면을 추출할 수 있도록 하기 위함입니다. 이렇게 highlights/non-highlights에 해당하는 시간을 지정한 뒤 subproccess 모듈을 활용해 영상의 추출 작업을 수행하였습니다. 
